@@ -1,23 +1,37 @@
 const cds = require('@sap/cds')
 
 class ProcessorService extends cds.ApplicationService {
-  /** Registering custom event handlers */
-  init() {
-    this.before("UPDATE", "Incidents", (req) => this.onUpdate(req));
-    this.before("CREATE", "Incidents", (req) => this.changeUrgencyDueToSubject(req.data));
 
-    return super.init();
+  init() {
+
+    this.before("UPDATE", "Incidents", (req) =>
+      this.onUpdate(req)
+    )
+
+    this.before("CREATE", "Incidents", (req) =>
+      this.changeUrgencyDueToSubject(req.data)
+    )
+
+    return super.init()
   }
 
   changeUrgencyDueToSubject(data) {
-    let urgent = data.title?.match(/urgent/i)
-    if (urgent) data.urgency_code = 'H'
+    if (data.title?.match(/urgent/i)) {
+      data.urgency_code = 'H'
+    }
   }
 
-  /** Custom Validation */
-  async onUpdate (req) {
-    let closed = await SELECT.one(1) .from (req.subject) .where `status.code = 'C'`
-    if (closed) req.reject `Can't modify a closed incident!`
+  async onUpdate(req) {
+    const { Incidents } = cds.entities
+
+    const incident = await SELECT.one.from(Incidents)
+      .columns('status_code')
+      .where({ ID: req.data.ID })
+
+    if (incident?.status_code === 'C') {
+      req.reject(`Can't modify a closed incident!`)
+    }
   }
 }
+
 module.exports = { ProcessorService }
