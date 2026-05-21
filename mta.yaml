@@ -1,0 +1,101 @@
+_schema-version: "3.3.0"
+ID: incident-management
+version: 1.0.0
+description: "Incident Management CAP Project"
+
+parameters:
+  enable-parallel-deployments: true
+
+build-parameters:
+  before-all:
+    - builder: custom
+      commands:
+        - npm ci
+        - npx cds build --production
+
+modules:
+
+  # ========================= CAP BACKEND =========================
+  - name: incident-management-srv
+    type: nodejs
+    path: gen/srv
+    parameters:
+      instances: 1
+      buildpack: nodejs_buildpack
+    provides:
+      - name: srv-api
+        properties:
+          srv-url: ${default-url}
+    requires:
+      - name: incident-management-auth
+      - name: incident-management-destination
+      - name: incident-management-db
+
+  # ========================= UI5 APP =========================
+  - name: incidentmanagementincidents
+    type: html5
+    path: app/incidents
+    build-parameters:
+      builder: npm-ci
+      build-result: dist
+      supported-platforms: []
+
+  # ========================= APP DEPLOYER =========================
+  - name: incident-management-app-deployer
+    type: com.sap.application.content
+    path: app
+    build-parameters:
+      requires:
+        - name: incidentmanagementincidents
+          artifacts:
+            - incidents.zip
+          target-path: resources/
+    requires:
+      - name: incident-management-html5-repo-host
+      - name: incident-management-auth
+      - name: srv-api
+
+  # ========================= DESTINATIONS =========================
+  - name: incident-management-destinations
+    type: com.sap.application.content
+    requires:
+      - name: incident-management-auth
+      - name: incident-management-destination
+      - name: incident-management-html5-repo-host
+      - name: srv-api
+    build-parameters:
+      no-source: true
+
+resources:
+
+  # ========================= XSUAA =========================
+  - name: incident-management-auth
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: xsuaa
+      service-plan: application
+      path: ./xs-security.json
+      config:
+        xsappname: incident-management
+        tenant-mode: dedicated
+
+  # ========================= DESTINATION =========================
+  - name: incident-management-destination
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: destination
+      service-plan: lite
+
+  # ========================= HTML5 REPO =========================
+  - name: incident-management-html5-repo-host
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: html5-apps-repo
+      service-plan: app-host
+
+  # ========================= HANA =========================
+  - name: incident-management-db
+    type: org.cloudfoundry.managed-service
+    parameters:
+      service: hana
+      service-plan: hdi-shared
