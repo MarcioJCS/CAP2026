@@ -1,7 +1,9 @@
 {
   "name": "incident-management",
   "version": "1.0.0",
-  "engines": {"node": "20.x"},
+  "engines": {
+    "node": "20.x"
+  },
   "dependencies": {
     "@cap-js/hana": "2.8.0",
     "@sap-ux/eslint-plugin-fiori-tools": "10.0.5",
@@ -16,12 +18,13 @@
     "@cap-js/sqlite": "2",
     "@sap/cds-dk": "9",
     "@ui5/cli": "3.11.7",
-    "cds-plugin-ui5": "0.12.0"
+    "cds-plugin-ui5": "^0.17.1"
   },
   "scripts": {
     "test": "npx jest tests/test.js",
+    "port" : "5005",
     "start": "cds-serve",
-    "watch-incidents": "cds watch --open incidents/webapp/index.html"
+    "watch-incidents": "cds watch --open incidents/index.html"
   },
   "private": true,
   "workspaces": [
@@ -31,7 +34,7 @@
     "app/incidents"
   ],
   "cds": {
-    "requires": {
+      "requires": {
       "[development]": {
         "auth": {
           "kind": "mocked",

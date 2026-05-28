@@ -66,6 +66,24 @@ modules:
     build-parameters:
       no-source: true
 
+      # ========================= APP ROUTER =========================
+  - name: incident-management-approuter
+    type: approuter.nodejs
+    path: approuter
+    parameters:
+      memory: 256M
+      disk-quota: 256M
+    requires:
+      - name: srv-api
+        group: destinations
+        properties:
+          name: srv-api
+          url: ~{srv-url}
+          forwardAuthToken: true
+      - name: incident-management-auth
+      - name: incident-management-destination
+      - name: incident-management-html5-repo-host      
+
 resources:
 
   # ========================= XSUAA =========================
@@ -99,3 +117,5 @@ resources:
     parameters:
       service: hana
       service-plan: hdi-shared
+
+  
